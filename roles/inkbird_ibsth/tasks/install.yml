@@ -1,0 +1,57 @@
+---
+- name: Create log directories if it does not exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ inkbird_home }}/Data/Sensor"
+    - "{{ inkbird_home }}/Log/Sensor"
+  tags:
+    - inkbird_setup
+
+- name: Recursively change ownership of log directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: pi
+    group: pi
+  with_items:
+    - "{{ inkbird_home }}"
+  tags:
+    - inkbird_setup
+
+- name: Copy a DeviceList.csv to application directory
+  copy:
+    src: DeviceList.csv
+    dest: "{{ item }}"
+    owner: pi
+    group: pi
+    mode: 0644
+  with_items:
+    - "{{ inkbird_home }}/DeviceList.csv"
+  tags:
+    - inkbird_setup
+
+- name: Setup configuration file
+  template:
+    src: config.ini.j2
+    dest: "{{ item }}"
+    owner: pi
+    group: pi
+    mode: 0644
+  with_items:
+    - "{{ inkbird_home }}/config.ini"
+  tags:
+    - inkbird_setup
+
+- name: Ensure a job that runs every minute. Creates an entry.
+  cron:
+    name: "Gather Sensor Data"
+    user: pi
+    minute: "*"
+    hour: "*"
+    job: "cd /home/pi/raspberry-inkbird_ibsth;  /usr/bin/python3 /home/pi/raspberry-inkbird_ibsth/sensors_to_prometheus.py >/dev/null 2>&1"
+  tags:
+    - inkbird_setup

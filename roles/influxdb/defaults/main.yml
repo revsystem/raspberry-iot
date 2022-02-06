@@ -1,0 +1,2 @@
+influxdb_hostname: localhost
+influxdb_database_name: prometheus

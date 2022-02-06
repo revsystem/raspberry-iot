@@ -1,0 +1,17 @@
+- name: restart prometheus-node-exporter
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    name: prometheus-node-exporter
+  tags:
+    - prometheus_run
+
+- name: restart prometheus
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    name: prometheus
+  tags:
+    - prometheus_run

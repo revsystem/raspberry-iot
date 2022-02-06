@@ -1,0 +1,20 @@
+---
+- name: Install prometheus-node-exporter
+  apt:
+    name:
+      - prometheus-node-exporter
+    state: present
+
+- name: Add the user 'prometheus' with a primary group of 'prometheus'
+  user:
+    state: present
+    shell: /sbin/nologin
+    name: prometheus
+    group: prometheus
+
+- name: Install Prometheus
+  apt:
+    name:
+      - prometheus
+    state: "{{ (prometheus_version == 'latest') | ternary('latest', 'present') }}"
+

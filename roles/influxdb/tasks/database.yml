@@ -1,0 +1,12 @@
+---
+- name: Create database on influxdb
+  command: influx -execute 'CREATE DATABASE {{ influxdb_database_name }}'
+  register: _create_database
+  until: _create_database is succeeded
+  retries: 3
+  delay: 2
+  changed_when: false
+
+  # community.general.influxdb_database:
+  #   hostname: "{{ influxdb_hostname }}"
+  #   database_name: "{{ influxdb_database_name }}"

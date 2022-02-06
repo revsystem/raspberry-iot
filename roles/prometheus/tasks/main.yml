@@ -1,0 +1,10 @@
+---
+- import_tasks: install.yml
+  tags:
+    - prometheus_install
+
+- import_tasks: configure.yml
+  tags:
+    - prometheus_install
+    - prometheus_configure
+

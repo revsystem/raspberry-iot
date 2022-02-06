@@ -1,0 +1,21 @@
+---
+- name: Install Python3
+  apt:
+    name:
+      - python3-dev
+      - python3-pip
+    state: present
+    update_cache: yes
+  tags:
+    - install_python3
+
+- name: Install libraries
+  apt:
+    name:
+      - libglib2.0-dev
+      - bluez
+      - libatlas-base-dev
+    state: present
+    update_cache: yes
+  tags:
+    - install_libraries

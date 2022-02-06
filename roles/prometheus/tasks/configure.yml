@@ -1,0 +1,36 @@
+---
+- name: Setup systemd configuration file for node_exporter
+  template:
+    src: etc/systemd/system/prometheus-node-exporter.service.j2
+    dest: /etc/systemd/system/prometheus-node-exporter.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart prometheus-node-exporter
+
+- name: Setup systemd configuration file for prometheus
+  template:
+    src: etc/systemd/system/prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart prometheus
+
+- name: Setup prometheus configuration file
+  template:
+    src: etc/prometheus/prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart prometheus
+
+- name: Create Prometheus storage directories if it does not exist
+  file:
+    path: /var/lib/prometheus
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+  notify: restart prometheus

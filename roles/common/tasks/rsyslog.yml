@@ -1,0 +1,11 @@
+---
+- name: Logging for cron
+  lineinfile:
+    dest: /etc/rsyslog.conf
+    state: present
+    #backrefs: yes
+    regexp: "^cron.*"
+    insertafter: "# cron.* "
+    line: "cron.*                          -/var/log/cron.log"
+  notify: restart rsyslog
+  tags: cron_setup

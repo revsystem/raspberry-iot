@@ -1,0 +1,3 @@
+---
+grafana_version: latest
+grafana_dependencies: apt-transport-https
