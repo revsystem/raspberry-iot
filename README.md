@@ -2,7 +2,7 @@
 
 Gather variable data and visualized with Raspberry Pi.
 These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry Piで取得しPrometheusとGrafanaで可視化する](https://qiita.com/revsystem/items/4097d0ff447913e2675a)
-(Acquire data from Inkbird's thermo-hygrometer with Raspberry Pi and visualize it with Prometheus and Grafana.)
+(Gathering data from Inkbird's thermo-hygrometer with Raspberry Pi and visualize it with Prometheus and Grafana.)
 
 ## Licensing
 
@@ -29,3 +29,5 @@ Their code is licensed under an [MIT style license](https://github.com/cloudalch
 > LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING > FROM,
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN > THE
 > SOFTWARE.
+
+Python code for Inkbird IBS-TH1 was borrowed by [家の中のセンサデータをRaspberryPiで取得しまくり、スーパーIoTハウスを実現 (@c60evaporator)](https://qiita.com/c60evaporator/items/283d0569eba58830f86e)
