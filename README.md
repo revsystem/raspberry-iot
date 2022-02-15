@@ -27,8 +27,8 @@ Role Variables
 | `influxdb_hostname` | roles/influxdb/defaults/main.yml | localhost | Influxdb Hostname |
 | `influxdb_database_name` | roles/influxdb/defaults/main.yml | prometheus | Influxdb DB name |
 | `inkbird_home` | roles/inkbird_ibsth/defaults/main.yml | /home/pi/raspberry-inkbird_ibsth | Path to Inkbird home directory |
-| `prometheus_version` | roles/prometheus/defaults/main.yml | Prometheus package version |
-| `prometheus_hostname` | roles/prometheus/defaults/main.yml | Prometheus Host name |
+| `prometheus_version` | roles/prometheus/defaults/main.yml | latest| Prometheus package version |
+| `prometheus_hostname` | roles/prometheus/defaults/main.yml | localhost | Prometheus Host name |
 
 ## Usage
 
