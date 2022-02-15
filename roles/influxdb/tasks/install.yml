@@ -23,7 +23,7 @@
   apt:
     name:
       - influxdb
-    state: "{{ (grafana_version == 'latest') | ternary('latest', 'present') }}"
+    state: "{{ (influxdb_version == 'latest') | ternary('latest', 'present') }}"
     update_cache: yes
 
 - name: unmask influxdb

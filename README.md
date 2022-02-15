@@ -4,6 +4,39 @@ Gather variable data and visualized with Raspberry Pi.
 These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry Piで取得しPrometheusとGrafanaで可視化する](https://qiita.com/revsystem/items/4097d0ff447913e2675a)
 (Gathering data from Inkbird's thermo-hygrometer with Raspberry Pi and visualize it with Prometheus and Grafana.)
 
+## Requirements
+
+- Ansible >= 2.7
+
+## Variables
+
+ssh.confg
+Fill in the ansible_host, ansible_user following your host.
+
+```script:hosts
+[IoT]
+raspberry-iot ansible_host=192.168.1.100 ansible_user=pi
+```
+
+Role Variables
+
+| Name           | Path          | Default Value | Description          |
+| -------------- | ------------- | --------------|----------------------|
+| `grafana_version` | roles/grafana/defaults/main.yml | latest | Grafana package version |
+| `influxdb_version` | roles/influxdb/defaults/main.yml | latest | Influxdb package version |
+| `influxdb_hostname` | roles/influxdb/defaults/main.yml | localhost | Influxdb Hostname |
+| `influxdb_database_name` | roles/influxdb/defaults/main.yml | prometheus | Influxdb DB name |
+| `inkbird_home` | roles/inkbird_ibsth/defaults/main.yml | /home/pi/raspberry-inkbird_ibsth | Path to Inkbird home directory |
+| `prometheus_version` | roles/prometheus/defaults/main.yml | Prometheus package version |
+| `prometheus_hostname` | roles/prometheus/defaults/main.yml | Prometheus Host name |
+
+## Usage
+
+```bash
+ansible-playbook -i hosts -b iot.yml --diff  --check
+ansible-playbook -i hosts -b iot.yml --diff
+```
+
 ## Licensing
 
 Ansible role for grafana was borrowed from the fine work done by the [cloudalchemy group](https://github.com/cloudalchemy/ansible-grafana), thanks you.
