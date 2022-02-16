@@ -10,7 +10,8 @@ These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry
 
 ## Variables
 
-ssh.confg
+### ssh.confg
+
 Fill in the ansible_host, ansible_user following your host.
 
 ```script:hosts
@@ -18,10 +19,10 @@ Fill in the ansible_host, ansible_user following your host.
 raspberry-iot ansible_host=192.168.1.100 ansible_user=pi
 ```
 
-Role Variables
+### Role Variables
 
 | Name           | Path          | Default Value | Description          |
-| -------------- | ------------- | --------------|----------------------|
+| -------------- | ------------- |-------------- |--------------------- |
 | `grafana_version` | roles/grafana/defaults/main.yml | latest | Grafana package version |
 | `influxdb_version` | roles/influxdb/defaults/main.yml | latest | Influxdb package version |
 | `influxdb_hostname` | roles/influxdb/defaults/main.yml | localhost | Influxdb Hostname |
@@ -30,12 +31,34 @@ Role Variables
 | `prometheus_version` | roles/prometheus/defaults/main.yml | latest| Prometheus package version |
 | `prometheus_hostname` | roles/prometheus/defaults/main.yml | localhost | Prometheus Host name |
 
+### DeviceList.csv
+
+CSV structure
+| Name           | Description          |
+| -------------- |--------------------- |
+| DeviceName | Manage device name. Using as identifier |
+| SensorType | kind of sensors. Using for getting sensor class |
+| MacAddress | MacAddress of sensors |
+| Timeout | Value of timeout when scanning |
+| Retry | Max number of retry |
+
+Specification.
+
+- [設定ファイル](https://qiita.com/c60evaporator/items/283d0569eba58830f86e#%E8%A8%AD%E5%AE%9A%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB)
+
 ## Usage
 
 ```bash
 ansible-playbook -i hosts -b iot.yml --diff  --check
 ansible-playbook -i hosts -b iot.yml --diff
 ```
+
+You need to setup the Grafana dashboard.
+
+- login with Admin account.
+- connect to the datasource. ( InfluxDB )
+- create the dashborad using datasource.
+- add panels as you like.
 
 ## Licensing
 

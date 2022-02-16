@@ -1,4 +1,4 @@
-DeviceName,SensorType,MacAddress,Timeout,Retry,Offset_Temp,Offset_Humid,API_URL,Token
-Inkbird_IBSTH1_1,Inkbird_IBSTH1,10:08:2C:21:EE:45,0,2,0,0,,
-Inkbird_IBSTH2_1,Inkbird_IBSTH2,49:42:07:00:00:E6,0,2,0,0,,
-Inkbird_IBSTH2_2,Inkbird_IBSTH2,49:42:08:00:08:C6,0,2,0,0,,
+DeviceName,SensorType,MacAddress,Timeout,Retry
+Inkbird_IBSTH1_1,Inkbird_IBSTH1,10:08:2C:xx:xx:xx,0,2
+Inkbird_IBSTH2_1,Inkbird_IBSTH2,49:42:07:xx:xx:xx,0,2
+Inkbird_IBSTH2_2,Inkbird_IBSTH2,49:42:08:xx:xx:xx,0,2
