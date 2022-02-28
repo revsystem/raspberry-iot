@@ -1,0 +1,10 @@
+---
+- hosts: IoT
+  become: yes
+  roles:
+    - common
+    - python3
+    - inkbird_ibsth
+    - prometheus
+    - grafana
+    - influxdb

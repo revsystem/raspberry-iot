@@ -1,0 +1,4 @@
+DeviceName,SensorType,MacAddress,Timeout,Retry
+Inkbird_IBSTH1_1,Inkbird_IBSTH1,10:08:2C:xx:xx:xx,0,2
+Inkbird_IBSTH2_1,Inkbird_IBSTH2,49:42:07:xx:xx:xx,0,2
+Inkbird_IBSTH2_2,Inkbird_IBSTH2,49:42:08:xx:xx:xx,0,2

@@ -1,0 +1,33 @@
+---
+- block:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+      register: _pre_update_apt_cache
+      until: _pre_update_apt_cache is succeeded
+
+    # - name: Upgrade all packages to the latest version
+    #   apt:
+    #     name: "*"
+    #     state: latest
+    #   tags:
+    #     - apt_upgrade
+
+    - name: Remove useless packages from the cache
+      apt:
+        autoclean: yes
+      tags:
+        - apt_upgrade
+        - apt_autoclean
+
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
+      tags:
+        - apt_upgrade
+        - apt_autoremove
+
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      apt:
+        upgrade: dist
+      tags: apt_dist_upgrade

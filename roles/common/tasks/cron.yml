@@ -1,0 +1,11 @@
+---
+- name: Update for cron
+  lineinfile:
+    dest: /etc/default/cron
+    state: present
+    #backrefs: yes
+    regexp: "^#EXTRA_OPTS=''"
+    insertafter: "# EXTRA_OPTS=''"
+    line: "EXTRA_OPTS='-L 15'"
+  notify: restart cron
+  tags: cron_setup

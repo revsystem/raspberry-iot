@@ -1,0 +1,4 @@
+---
+prometheus_version: latest
+prometheus_dependencies: []
+prometheus_hostname: localhost

@@ -1,0 +1,11 @@
+---
+- name: Setup services management
+  service:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    enabled: "{{ item.enabled }}"
+  with_items:
+    - { name: rsyslog, state: started, enabled: yes }
+    - { name: bluetooth, state: started, enabled: yes }
+    - { name: cron, state: started, enabled: yes }
+  tags: service_setup

@@ -1,0 +1,13 @@
+---
+- name: Add lines to prometheus.yml
+  blockinfile:
+    dest: /etc/prometheus/prometheus.yml
+    state: present
+    #backrefs: yes
+    block: |
+      remote_write:
+        - url: "http://{{ influxdb_hostname }}:8086/api/v1/prom/write?db=prometheus"
+
+      remote_read:
+        - url: "http://{{ influxdb_hostname }}:8086/api/v1/prom/read?db=prometheus"
+  notify: restart prometheus

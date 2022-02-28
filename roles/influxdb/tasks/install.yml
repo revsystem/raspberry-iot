@@ -1,0 +1,35 @@
+- block:
+    - name: Import InfluxDB GPG signing key
+      apt_key:
+        url: "https://repos.influxdata.com/influxdb.key"
+        state: present
+        validate_certs: yes
+      register: _add_apt_key
+      until: _add_apt_key is succeeded
+      retries: 5
+      delay: 2
+
+    - name: Add InfluxDB repository
+      apt_repository:
+        repo: deb https://repos.influxdata.com/debian $(lsb_release -cs) stable
+        state: present
+        update_cache: yes
+      register: _update_apt_cache
+      until: _update_apt_cache is succeeded
+      retries: 5
+      delay: 2
+
+- name: Install InfluxDB
+  apt:
+    name:
+      - influxdb
+    state: "{{ (influxdb_version == 'latest') | ternary('latest', 'present') }}"
+    update_cache: yes
+
+- name: unmask influxdb
+  systemd:
+    masked: no
+    daemon_reload: yes
+    enabled: yes
+    name: influxdb
+  notify: restart influxdb

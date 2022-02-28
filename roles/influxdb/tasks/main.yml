@@ -1,0 +1,14 @@
+- import_tasks: install.yml
+  tags:
+    - influxdb_install
+
+- import_tasks: database.yml
+  tags:
+    - influxdb_install
+    - influxdb_configure
+
+- import_tasks: configure.yml
+  tags:
+    - influxdb_install
+    - influxdb_configure
+
