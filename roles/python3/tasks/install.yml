@@ -9,6 +9,15 @@
   tags:
     - install_python3
 
+- name: Install Python libraries
+  pip:
+    name:
+      - luepy
+      - pandas
+      - prometheus-client
+  tags:
+    - install_python3
+
 - name: Install libraries
   apt:
     name:
