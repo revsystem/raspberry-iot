@@ -1,6 +1,6 @@
 ---
 - hosts: IoT
-  become: yes
+  become: true
   roles:
     - common
     - python3
