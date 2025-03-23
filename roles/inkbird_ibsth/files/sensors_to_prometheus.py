@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-from bluepy import btle
-from inkbird_ibsth1 import GetIBSTH1Data
-from datetime import datetime, timedelta
-from prometheus_client import Counter, Gauge, write_to_textfile, REGISTRY
-import os
-import csv
 import configparser
-import pandas as pd
-import requests
+import csv
 import logging
+import os
 import subprocess
-import time
+from datetime import datetime, timedelta
 
+import pandas as pd
+from inkbird_ibsth1 import GetIBSTH1Data
+from prometheus_client import REGISTRY, Gauge, write_to_textfile
 
 #グローバル変数
 global masterdate

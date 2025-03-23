@@ -1,7 +1,9 @@
 # coding=UTF-8
 
-from bluepy import btle
 import struct
+
+from bluepy import btle
+
 
 #Inkbird IBS-TH1データ取得クラス
 class GetIBSTH1Data():

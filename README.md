@@ -6,11 +6,12 @@ These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry
 
 ## Requirements
 
-- Ansible >= 2.7
+- Ansible >= 11.3.0
+- ansible-core >= 2.18.3
 
 ## Variables
 
-### ssh.confg
+### hosts
 
 Fill in the ansible_host, ansible_user following your host.
 
@@ -34,6 +35,7 @@ raspberry-iot ansible_host=192.168.1.100 ansible_user=pi
 ### DeviceList.csv
 
 CSV structure
+
 | Name           | Description          |
 | -------------- |--------------------- |
 | DeviceName | Manage device name. Using as identifier |
