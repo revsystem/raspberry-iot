@@ -3,12 +3,6 @@ global:
   evaluation_interval: 1m
 
 
-# Alertmanager configuration
-alerting:
-  alertmanagers:
-  - static_configs:
-    - targets: ['{{ prometheus_hostname }}:9093']
-
 scrape_configs:
   - job_name: 'prometheus'
 
@@ -18,3 +12,6 @@ scrape_configs:
   - job_name: node
     static_configs:
       - targets: ['{{ prometheus_hostname }}:9100']
+
+remote_write:
+  - url: "http://{{ influxdb_hostname }}:8086/api/v1/prom/write?db=prometheus"

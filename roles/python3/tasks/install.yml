@@ -7,22 +7,3 @@
     state: present
   tags:
     - install_python3
-
-- name: Install Python libraries
-  pip:
-    name:
-      - bluepy
-      - pandas
-      - prometheus-client
-  tags:
-    - install_python3
-
-- name: Install libraries
-  apt:
-    name:
-      - libglib2.0-dev
-      - bluez
-      - libatlas-base-dev
-    state: present
-  tags:
-    - install_libraries

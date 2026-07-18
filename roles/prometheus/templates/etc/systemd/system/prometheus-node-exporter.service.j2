@@ -4,7 +4,7 @@ Description=node_exporter for Prometheus
 [Service]
 Restart=always
 User=prometheus
-ExecStart=/usr/bin/prometheus-node-exporter --collector.textfile.directory {{ inkbird_home }}/Data
+ExecStart=/usr/bin/prometheus-node-exporter --web.listen-address=127.0.0.1:9100 --collector.textfile.directory {{ inkbird_home }}/Data
 ExecReload=/bin/kill -HUP $MAINPID
 TimeoutStopSec=20s
 SendSIGKILL=no

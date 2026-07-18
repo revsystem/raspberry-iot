@@ -1,147 +1,165 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
+"""DeviceList.csv の各デバイスからセンサデータを取得し、CSV と Prometheus textfile に出力する。
+
+crontab (毎分実行):
+* * * * * cd /home/pi/raspberry-inkbird_ibsth; .venv/bin/python3 sensors_to_prometheus.py
+"""
 
 import configparser
 import csv
 import logging
-import os
-import subprocess
+import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
-import pandas as pd
-from inkbird_ibsth1 import GetIBSTH1Data
-from prometheus_client import REGISTRY, Gauge, write_to_textfile
+from prometheus_client import CollectorRegistry, Gauge, write_to_textfile
 
-#グローバル変数
-global masterdate
+import remo
+import switchbot
 
-######Inkbird IBS-TH1のデータ取得######
-def getdata_ibsth1(device):
-    #値が得られないとき、最大device.Retry回スキャンを繰り返す
-    for i in range(device.Retry):
+BASE_DIR = Path(__file__).resolve().parent
+
+# 開始時刻と、分単位に丸めた基準時刻 (30秒以上は切り上げ)
+start_date = datetime.today()
+master_date = start_date.replace(second=0, microsecond=0)
+if start_date.second >= 30:
+    master_date += timedelta(minutes=1)
+
+cfg = configparser.ConfigParser()
+cfg.read(BASE_DIR / 'config.ini', encoding='utf-8')
+
+# センサメトリクス専用のレジストリ
+# (デフォルトレジストリだと python_*/process_* が混入し、node_exporter 側の同名メトリクスと衝突する)
+registry = CollectorRegistry()
+
+
+def fetch_with_retry(fetch, device):
+    """fetch() を最大 Retry 回試行して結果を返す。全て失敗したときは None。"""
+    for i in range(int(device['Retry'])):
         try:
-            sensorValue = GetIBSTH1Data().get_ibsth1_data(device.MacAddress, device.SensorType)
-        #エラー出たらログ出力
-        except:
-            logging.warning(f'retry to get data [loop{str(i)}, date{str(masterdate)}, device{device.DeviceName}]')
-            sensorValue = None
-            continue
-        else:
-            break
+            return fetch()
+        except Exception:
+            logging.warning('retry to get data [loop: %d, date: %s, device: %s]',
+                            i, master_date, device['DeviceName'], exc_info=True)
+    return None
 
-    if sensorValue is not None:
-        #POSTするデータ
-        data = {
-            'DeviceName': device.DeviceName,
-            'Date_Master': str(masterdate),
-            'Date': str(datetime.today()),
-            'Temperature': str(sensorValue['Temperature']),
-            'Humidity': str(sensorValue['Humidity']),
-        }
-        return data
-    #値取得できていなかったら、ログ出力してBluetoothアダプタ再起動
-    else:
-        logging.error(f'cannot get data [loop{str(device.Retry)}, date{str(masterdate)}, device{device.DeviceName}]')
-        restart_hci0(device.DeviceName)
+
+# Nature Remoの電力データ取得
+def getdata_remo(device):
+    value = fetch_with_retry(
+        lambda: remo.get_electric_power_data(device['Token'], device['API_URL']), device)
+    if value is None:
+        logging.error('cannot get data [date: %s, device: %s]', master_date, device['DeviceName'])
         return None
+    return {
+        'DeviceName': device['DeviceName'],
+        'Date_Master': master_date,
+        'Date': datetime.today(),
+        'CumulativeEnergy': float(value['CumulativeEnergy']),
+        'Watt': int(value['Watt']),
+        'RevCumulativeEnergy': float(value['RevCumulativeEnergy']),
+    }
 
 
-######データのCSV出力######
+# SwitchBot Hub 2の温湿度データ取得
+def getdata_switchbot_hub2(device):
+    value = fetch_with_retry(
+        lambda: switchbot.get_data(device['Token'], device['API_URL'], device['Secret']), device)
+    if value is None:
+        logging.error('cannot get data [date: %s, device: %s]', master_date, device['DeviceName'])
+        return None
+    return {
+        'DeviceName': device['DeviceName'],
+        'Date_Master': master_date,
+        'Date': datetime.today(),
+        'Temperature': float(value['temperature']),
+        'Humidity': float(value['humidity']),
+        'lightLevel': float(value['lightLevel']),
+    }
+
+
+# データのCSV出力 (デバイス別・日別ファイルに追記)
 def output_csv(data, csvpath):
-    dvname = data['DeviceName']
-    monthstr = masterdate.strftime('%Y%m')
-    #出力先フォルダ名
-    outdir = f'{csvpath}/{dvname}/{masterdate.year}'
-    #出力先フォルダが存在しないとき、新規作成
-    os.makedirs(outdir, exist_ok=True)
-    #出力ファイルのパス
-    outpath = f'{outdir}/{dvname}_{monthstr}.csv'
+    out_dir = Path(csvpath) / data['DeviceName'] / str(master_date.year) / master_date.strftime('%Y%m')
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{data['DeviceName']}_{master_date.strftime('%Y%m%d')}.csv"
 
-    #出力ファイル存在しないとき、新たに作成
-    if not os.path.exists(outpath):
-        with open(outpath, 'w') as f:
-            writer = csv.DictWriter(f, data.keys())
+    is_new_file = not out_path.exists()
+    with open(out_path, 'a', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, data.keys())
+        if is_new_file:
             writer.writeheader()
-            writer.writerow(data)
-    #出力ファイル存在するとき、1行追加
-    else:
-        with open(outpath, 'a') as f:
-            writer = csv.DictWriter(f, data.keys())
-            writer.writerow(data)
-
-######温度と湿度データを.promファイルに出力######
-def output_prometheus_collector(data):
-    # メトリック名を指定
-    g_temp  = Gauge(data['DeviceName'] + '_temp', 'Gauge')
-    g_humid = Gauge(data['DeviceName'] + '_humid','Gauge')
-
-    while True:
-        g_temp.set(data['Temperature'])
-        g_humid.set(data['Humidity'])
-
-        # promファイルに出力
-        write_to_textfile(cfg['Path']['PromOutPut'], REGISTRY)
-        break
-
-######Bluetoothアダプタ再起動######
-def restart_hci0(devicename):
-    passwd = 'RaspberryPiパスワードを入力'
-    subprocess.run(('sudo','-S','hciconfig','hci0','down'), input=passwd, check=True)
-    subprocess.run(('sudo','-S','hciconfig','hci0','up'), input=passwd, check=True)
-    logging.error(f'restart bluetooth adapter [date{str(masterdate)}, device{devicename}]')
+        writer.writerow(data)
 
 
-######メイン######
-if __name__ == '__main__':
-    #開始時刻を取得
-    startdate = datetime.today()
-    #開始時刻を分単位で丸める
-    masterdate = startdate.replace(second=0, microsecond=0)
-    if startdate.second >= 30:
-        masterdate += timedelta(minutes=1)
+# Gaugeに値をセットし、promファイルに出力
+def output_prometheus(device_name, values):
+    for suffix, value in values.items():
+        Gauge(f'{device_name}_{suffix}', 'Gauge', registry=registry).set(value)
+    write_to_textfile(cfg['Path']['PromOutPut'], registry)
 
-    #設定ファイルとデバイスリスト読込
-    cfg = configparser.ConfigParser()
-    cfg.read('./config.ini', encoding='utf-8')
-    df_devicelist = pd.read_csv('./DeviceList.csv')
-    #全センサ数とデータ取得成功数
-    sensor_num = len(df_devicelist)
+
+def output_prometheus_remo(data):
+    values = {
+        'CumulativeEnergy': data['CumulativeEnergy'],
+        'RevCumulativeEnergy': data['RevCumulativeEnergy'],
+        'Watt': data['Watt'],
+    }
+    output_prometheus(data['DeviceName'], values)
+
+    # 00:00 の場合のみ、その日の起点値として専用のpromデータを出力
+    if master_date.strftime('%H%M') == '0000':
+        output_prometheus(data['DeviceName'],
+                          {f'{suffix}_0000': value for suffix, value in values.items()})
+
+
+def output_prometheus_hub2(data):
+    output_prometheus(data['DeviceName'], {
+        'Temperature': data['Temperature'],
+        'Humidity': data['Humidity'],
+        'LightLevel': data['lightLevel'],
+    })
+
+
+# SensorType -> (データ取得関数, prom出力関数)
+HANDLERS = {
+    'Nature_Remo': (getdata_remo, output_prometheus_remo),
+    'Switchbot_Hub2': (getdata_switchbot_hub2, output_prometheus_hub2),
+}
+
+
+def main():
+    with open(BASE_DIR / 'DeviceList.csv', encoding='utf-8') as f:
+        devices = list(csv.DictReader(f))
+
+    log_name = f"sensor_log_{master_date.strftime('%Y%m%d')}.log"
+    logging.basicConfig(filename=f"{cfg['Path']['LogOutput']}/{log_name}", level=logging.INFO)
+
     success_num = 0
+    for device in devices:
+        handler = HANDLERS.get(device['SensorType'])
+        if handler is None:
+            continue
+        getdata, output_prom = handler
 
-    #ログの初期化
-    logname = f"/sensorlog_{str(masterdate.strftime('%y%m%d'))}.log"
-    logging.basicConfig(filename=cfg['Path']['LogOutput'] + logname, level=logging.INFO)
+        data = getdata(device)
+        if data is None:
+            continue
 
-    #取得した全データ保持用dict
-    all_values_dict = None
+        output_csv(data, cfg['Path']['CSVOutput'])
+        output_prom(data)
+        success_num += 1
 
-    ######デバイスごとにデータ取得######
-    for device in df_devicelist.itertuples():
-        #Inkbird IBS-TH1
-        if device.SensorType in ['Inkbird_IBSTH2','Inkbird_IBSTH1']:
-            data = getdata_ibsth1(device)
-        #上記以外
-        else:
-            data = None
+    # ハートビート。全デバイス失敗時もファイルを必ず書き直すことで、
+    # 取得できなかったデバイスのメトリクスがファイルに残り続ける(=凍った値が生きて見える)のを防ぐ
+    Gauge('sensors_last_run_timestamp_seconds',
+          'Unix time when the sensor collector last completed a run',
+          registry=registry).set(time.time())
+    write_to_textfile(cfg['Path']['PromOutPut'], registry)
 
-        #データが存在するとき、全データ保持用Dictに追加し、CSV出力
-        if data is not None:
-            #all_values_dictがNoneのとき、新たに辞書を作成
-            if all_values_dict is None:
-                all_values_dict = {data['DeviceName']: data}
-            #all_values_dictがNoneでないとき、既存の辞書に追加
-            else:
-                all_values_dict[data['DeviceName']] = data
-
-            if device.SensorType in ['Inkbird_IBSTH2','Inkbird_IBSTH1']:
-                # .promファイル出力
-                output_prometheus_collector(data)
-
-            #CSV出力
-            output_csv(data, cfg['Path']['CSVOutput'])
-            #成功数プラス
-            success_num+=1
+    logging.info('[master_date: %s start_date: %s end_date: %s success: %s/%s]',
+                 master_date, start_date, datetime.today(), success_num, len(devices))
 
 
-    #処理終了をログ出力
-    logging.info(f'[masterdate{str(masterdate)} startdate{str(startdate)} enddate{str(datetime.today())} success{str(success_num)}/{str(sensor_num)}]')
+if __name__ == '__main__':
+    main()
