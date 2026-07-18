@@ -4,10 +4,21 @@ Gather variable data and visualized with Raspberry Pi.
 These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry Piで取得しPrometheusとGrafanaで可視化する](https://qiita.com/revsystem/items/4097d0ff447913e2675a)
 (Gathering data from Inkbird's thermo-hygrometer with Raspberry Pi and visualize it with Prometheus and Grafana.)
 
+The sensor collector application (`roles/inkbird_ibsth/files/sensors_to_prometheus.py`) now gathers
+data from Nature Remo (smart meter power) and SwitchBot Hub 2 (temperature/humidity/light) cloud APIs
+instead of reading Inkbird IBS-TH1/TH2 sensors directly over Bluetooth. Bluetooth/Inkbird support has
+been fully retired: the original BLE-based Inkbird code, the `bluetooth` service, and the native
+libraries it needed (`bluez`, `libglib2.0-dev`, `libatlas-base-dev`) are no longer part of this
+playbook.
+
 ## Requirements
 
 - Ansible >= 11.3.0
 - ansible-core >= 2.18.3
+
+The `inkbird_ibsth` role installs [uv](https://docs.astral.sh/uv/) on the target host and runs
+`uv sync` to build the sensor collector's virtual environment (`{inkbird_home}/.venv`), so the
+target host needs outbound internet access during provisioning.
 
 ## Variables
 
@@ -28,7 +39,7 @@ raspberry-iot ansible_host=192.168.1.100 ansible_user=pi
 | `influxdb_version` | roles/influxdb/defaults/main.yml | latest | Influxdb package version |
 | `influxdb_hostname` | roles/influxdb/defaults/main.yml | localhost | Influxdb Hostname |
 | `influxdb_database_name` | roles/influxdb/defaults/main.yml | prometheus | Influxdb DB name |
-| `inkbird_home` | roles/inkbird_ibsth/defaults/main.yml | /home/pi/raspberry-inkbird_ibsth | Path to Inkbird home directory |
+| `inkbird_home` | roles/inkbird_ibsth/defaults/main.yml | /home/pi/raspberry-inkbird_ibsth | Path to the sensor collector application directory |
 | `prometheus_version` | roles/prometheus/defaults/main.yml | latest| Prometheus package version |
 | `prometheus_hostname` | roles/prometheus/defaults/main.yml | localhost | Prometheus Host name |
 
@@ -39,14 +50,19 @@ CSV structure
 | Name           | Description          |
 | -------------- |--------------------- |
 | DeviceName | Manage device name. Using as identifier |
-| SensorType | kind of sensors. Using for getting sensor class |
-| MacAddress | MacAddress of sensors |
+| SensorType | Sensor class. `Nature_Remo` or `Switchbot_Hub2` are handled by `sensors_to_prometheus.py`; other values are skipped |
+| MacAddress | Unused. Left over from the retired Bluetooth-based Inkbird schema; safe to leave blank |
 | Timeout | Value of timeout when scanning |
 | Retry | Max number of retry |
+| Offset_Temp | Unused by the current sensor types |
+| Offset_Humid | Unused by the current sensor types |
+| API_URL | Cloud API endpoint for the device (Nature Remo base URL, or SwitchBot device status URL) |
+| Token | API access token/key |
+| Secret | API signing secret (SwitchBot only; empty for Nature Remo) |
 
-Specification.
-
-- [設定ファイル](https://qiita.com/c60evaporator/items/283d0569eba58830f86e#%E8%A8%AD%E5%AE%9A%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB)
+`roles/inkbird_ibsth/files/DeviceList.csv` in this repository only contains placeholder rows. It
+holds real API tokens/secrets in production, so replace it with your own file (or override its
+content per-host) rather than committing real credentials.
 
 ## Usage
 
@@ -88,4 +104,6 @@ Their code is licensed under an [MIT style license](https://github.com/cloudalch
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN > THE
 > SOFTWARE.
 
-Python code for Inkbird IBS-TH1 was borrowed by [家の中のセンサデータをRaspberryPiで取得しまくり、スーパーIoTハウスを実現 (@c60evaporator)](https://qiita.com/c60evaporator/items/283d0569eba58830f86e)
+This project originally read Inkbird IBS-TH1 sensors over Bluetooth using Python code borrowed from
+[家の中のセンサデータをRaspberryPiで取得しまくり、スーパーIoTハウスを実現 (@c60evaporator)](https://qiita.com/c60evaporator/items/283d0569eba58830f86e).
+That code has since been removed along with the rest of the Bluetooth/Inkbird support (see above).

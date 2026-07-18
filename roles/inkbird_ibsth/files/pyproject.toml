@@ -1,0 +1,12 @@
+[project]
+name = "raspberry-inkbird-ibsth"
+version = "1.0.0"
+description = "Nature Remo / SwitchBot Hub 2 のセンサデータを CSV と Prometheus textfile に出力"
+requires-python = ">=3.12"
+dependencies = [
+    "prometheus-client>=0.25",
+    "requests>=2.34",
+]
+
+# 注: inkbird_ibsth1.py (Bluetooth直読み) は現在未使用のため bluepy は依存に含めていない。
+# 再び使う場合: uv add bluepy

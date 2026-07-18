@@ -22,6 +22,23 @@
   tags:
     - inkbird_setup
 
+- name: Copy inkbird_ibsth application files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ inkbird_home }}/{{ item }}"
+    owner: pi
+    group: pi
+    mode: 0644
+  with_items:
+    - sensors_to_prometheus.py
+    - remo.py
+    - switchbot.py
+    - test_switchbot.py
+    - pyproject.toml
+    - uv.lock
+  tags:
+    - inkbird_setup
+
 - name: Copy a DeviceList.csv to application directory
   copy:
     src: DeviceList.csv
@@ -29,6 +46,7 @@
     owner: pi
     group: pi
     mode: 0644
+    force: false
   with_items:
     - "{{ inkbird_home }}/DeviceList.csv"
   tags:
@@ -46,12 +64,36 @@
   tags:
     - inkbird_setup
 
+- name: Check whether uv is already installed for pi
+  stat:
+    path: "/home/{{ ansible_user }}/.local/bin/uv"
+  become: false
+  register: _uv_bin
+  tags:
+    - inkbird_setup
+
+- name: Install uv for pi
+  shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  become: false
+  when: not _uv_bin.stat.exists
+  tags:
+    - inkbird_setup
+
+- name: Sync the application virtual environment with uv
+  command: "/home/{{ ansible_user }}/.local/bin/uv sync"
+  args:
+    chdir: "{{ inkbird_home }}"
+    creates: "{{ inkbird_home }}/.venv/bin/python3"
+  become: false
+  tags:
+    - inkbird_setup
+
 - name: Ensure a job that runs every minute. Creates an entry.
   cron:
     name: "Gather Sensor Data"
     user: pi
     minute: "*"
     hour: "*"
-    job: "cd /home/pi/raspberry-inkbird_ibsth;  /usr/bin/python3 /home/pi/raspberry-inkbird_ibsth/sensors_to_prometheus.py >/dev/null 2>&1"
+    job: "cd {{ inkbird_home }};  .venv/bin/python3 {{ inkbird_home }}/sensors_to_prometheus.py >/dev/null 2>&1 || rm -f {{ inkbird_home }}/Data/inkbird-ibs-th.prom"
   tags:
     - inkbird_setup
