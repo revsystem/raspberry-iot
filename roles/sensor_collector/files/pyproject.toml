@@ -1,5 +1,5 @@
 [project]
-name = "raspberry-inkbird-ibsth"
+name = "raspberry-sensor-collector"
 version = "1.0.0"
 description = "Nature Remo / SwitchBot Hub 2 のセンサデータを CSV と Prometheus textfile に出力"
 requires-python = ">=3.12"

@@ -4,7 +4,7 @@ Gather variable data and visualized with Raspberry Pi.
 These Ansible tasks are based on [Inkbirdの温湿度計のデータをRaspberry Piで取得しPrometheusとGrafanaで可視化する](https://qiita.com/revsystem/items/4097d0ff447913e2675a)
 (Gathering data from Inkbird's thermo-hygrometer with Raspberry Pi and visualize it with Prometheus and Grafana.)
 
-The sensor collector application (`roles/inkbird_ibsth/files/sensors_to_prometheus.py`) now gathers
+The sensor collector application (`roles/sensor_collector/files/sensors_to_prometheus.py`) now gathers
 data from Nature Remo (smart meter power) and SwitchBot Hub 2 (temperature/humidity/light) cloud APIs
 instead of reading Inkbird IBS-TH1/TH2 sensors directly over Bluetooth. Bluetooth/Inkbird support has
 been fully retired: the original BLE-based Inkbird code, the `bluetooth` service, and the native
@@ -16,8 +16,8 @@ playbook.
 - Ansible >= 11.3.0
 - ansible-core >= 2.18.3
 
-The `inkbird_ibsth` role installs [uv](https://docs.astral.sh/uv/) on the target host and runs
-`uv sync` to build the sensor collector's virtual environment (`{inkbird_home}/.venv`), so the
+The `sensor_collector` role installs [uv](https://docs.astral.sh/uv/) on the target host and runs
+`uv sync` to build the sensor collector's virtual environment (`{sensor_collector_home}/.venv`), so the
 target host needs outbound internet access during provisioning.
 
 ## Variables
@@ -39,7 +39,7 @@ raspberry-iot ansible_host=192.168.1.100 ansible_user=pi
 | `influxdb_version` | roles/influxdb/defaults/main.yml | latest | Influxdb package version |
 | `influxdb_hostname` | roles/influxdb/defaults/main.yml | localhost | Influxdb Hostname |
 | `influxdb_database_name` | roles/influxdb/defaults/main.yml | prometheus | Influxdb DB name |
-| `inkbird_home` | roles/inkbird_ibsth/defaults/main.yml | /home/pi/raspberry-inkbird_ibsth | Path to the sensor collector application directory |
+| `sensor_collector_home` | roles/sensor_collector/defaults/main.yml | /home/pi/raspberry-sensor-collector | Path to the sensor collector application directory |
 | `prometheus_version` | roles/prometheus/defaults/main.yml | latest| Prometheus package version |
 | `prometheus_hostname` | roles/prometheus/defaults/main.yml | localhost | Prometheus Host name |
 
@@ -60,7 +60,7 @@ CSV structure
 | Token | API access token/key |
 | Secret | API signing secret (SwitchBot only; empty for Nature Remo) |
 
-`roles/inkbird_ibsth/files/DeviceList.csv` in this repository only contains placeholder rows. It
+`roles/sensor_collector/files/DeviceList.csv` in this repository only contains placeholder rows. It
 holds real API tokens/secrets in production, so replace it with your own file (or override its
 content per-host) rather than committing real credentials.
 

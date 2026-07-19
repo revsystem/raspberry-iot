@@ -2,7 +2,7 @@
 """DeviceList.csv の各デバイスからセンサデータを取得し、CSV と Prometheus textfile に出力する。
 
 crontab (毎分実行):
-* * * * * cd /home/pi/raspberry-inkbird_ibsth; .venv/bin/python3 sensors_to_prometheus.py
+* * * * * cd /home/pi/raspberry-sensor-collector; .venv/bin/python3 sensors_to_prometheus.py
 """
 
 import configparser

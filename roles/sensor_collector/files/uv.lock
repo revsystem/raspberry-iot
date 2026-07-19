@@ -91,7 +91,7 @@ wheels = [
 ]
 
 [[package]]
-name = "raspberry-inkbird-ibsth"
+name = "raspberry-sensor-collector"
 version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
