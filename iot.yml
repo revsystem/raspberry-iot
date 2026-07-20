@@ -4,7 +4,7 @@
   roles:
     - common
     - python3
-    - inkbird_ibsth
+    - sensor_collector
     - prometheus
     - grafana
     - influxdb
