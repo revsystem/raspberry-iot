@@ -100,17 +100,11 @@ def output_prometheus(device_name, values):
 
 
 def output_prometheus_remo(data):
-    values = {
+    output_prometheus(data['DeviceName'], {
         'CumulativeEnergy': data['CumulativeEnergy'],
         'RevCumulativeEnergy': data['RevCumulativeEnergy'],
         'Watt': data['Watt'],
-    }
-    output_prometheus(data['DeviceName'], values)
-
-    # 00:00 の場合のみ、その日の起点値として専用のpromデータを出力
-    if master_date.strftime('%H%M') == '0000':
-        output_prometheus(data['DeviceName'],
-                          {f'{suffix}_0000': value for suffix, value in values.items()})
+    })
 
 
 def output_prometheus_hub2(data):
